@@ -177,21 +177,32 @@ const VoiceAssistant: React.FC = () => {
         handleVoiceResponse("language");
       } else if (currentStep === Step.CategorySelection) {
         handleVoiceResponse("category");
-      } else {
-        // Regular issue description
+      } else if (currentStep === Step.IssueDescription) {
+        // Reset the issue text when starting a new recording
+        setUserIssue("");
         setIsRecording(true);
         
         speechRecognition.current.start(
           // onResult callback
           (text, isFinal) => {
+            // Update in real-time with the current transcript
+            setUserIssue(text);
+            
             if (isFinal) {
-              setUserIssue(text);
+              console.log("Final issue transcript:", text);
+              // Don't call handleIssueRecorded here, 
+              // it will be called by the onEnd callback
             }
           },
           // onEnd callback
           () => {
             setIsRecording(false);
-            handleIssueRecorded();
+            // Only handle the issue if we have text
+            if (userIssue && userIssue.trim().length > 0) {
+              handleIssueRecorded();
+            } else {
+              toast.error(getText('errorSpeechRecognition') as string);
+            }
           },
           // onError callback
           (error) => {
@@ -215,6 +226,7 @@ const VoiceAssistant: React.FC = () => {
     
     // Get speech in the selected language but save in English for the backend
     const userIssueForDisplay = userIssue;
+    console.log("Processing issue:", userIssueForDisplay);
     
     // Simulate AI processing to generate a summary
     // In a real implementation, this would call an AI service
@@ -369,7 +381,7 @@ const VoiceAssistant: React.FC = () => {
             className="w-full"
             onValueChange={(value) => {}}
           >
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="wait" key={currentStep}>
               <TabsContent value={Step.LanguageSelection} className="mt-0 space-y-8">
                 {voicePromptActive && (
                   <motion.div 
@@ -439,6 +451,7 @@ const VoiceAssistant: React.FC = () => {
                   
                   {userIssue && (
                     <motion.div
+                      key="user-issue"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="mt-4 p-4 bg-secondary/50 rounded-lg text-sm text-foreground w-full"

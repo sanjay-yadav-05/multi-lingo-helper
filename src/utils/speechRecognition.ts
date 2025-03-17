@@ -66,11 +66,26 @@ class SpeechRecognitionService {
     this.isListening = true;
     
     this.recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const resultIndex = event.resultIndex;
-      const transcript = event.results[resultIndex][0].transcript;
-      const isFinal = event.results[resultIndex].isFinal;
+      // Get the most recent result
+      const results = Array.from(event.results);
+      // Ensure we handle all results and not just the first one
+      let fullTranscript = '';
+      let isFinalResult = false;
       
-      onResult(transcript, isFinal);
+      for (let i = event.resultIndex; i < results.length; i++) {
+        const result = results[i];
+        const transcript = result[0].transcript;
+        const isFinal = result.isFinal;
+        
+        fullTranscript += transcript + ' ';
+        if (isFinal) {
+          isFinalResult = true;
+        }
+      }
+      
+      fullTranscript = fullTranscript.trim();
+      console.log('Speech recognition transcript:', fullTranscript, 'Final:', isFinalResult);
+      onResult(fullTranscript, isFinalResult);
     };
     
     this.recognition.onend = () => {
@@ -85,7 +100,11 @@ class SpeechRecognitionService {
     };
     
     try {
-      this.recognition.start();
+      // Reset recognition before starting again
+      this.recognition.abort();
+      setTimeout(() => {
+        this.recognition.start();
+      }, 100);
     } catch (error) {
       console.error('Speech recognition failed to start', error);
       onError(error);
