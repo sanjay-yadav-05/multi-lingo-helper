@@ -40,6 +40,12 @@ const VoiceAssistant: React.FC = () => {
   
   // Helper function to get text based on current language
   const getText = (key: keyof typeof translations) => {
+    // Skip accessing the categories key directly, handle it separately
+    if (key === 'categories') {
+      // Just return an empty object if trying to access categories directly
+      return {};
+    }
+    
     if (!selectedLanguage) return translations[key].en;
     return translations[key][selectedLanguage as keyof typeof translations[typeof key]];
   };
