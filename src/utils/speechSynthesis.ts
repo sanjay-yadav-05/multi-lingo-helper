@@ -65,7 +65,19 @@ class SpeechSynthesisService {
       const utterance = new SpeechSynthesisUtterance(text);
       
       // Set the voice based on language
-      utterance.voice = this.getVoiceForLanguage(options.language);
+      const voice = this.getVoiceForLanguage(options.language);
+      if (voice) {
+        utterance.voice = voice;
+        utterance.lang = voice.lang;
+      } else {
+        // Fallback language mapping if no matching voice
+        const langMap: Record<string, string> = {
+          'en': 'en-US',
+          'hi': 'hi-IN',
+          'mr': 'mr-IN'
+        };
+        utterance.lang = langMap[options.language] || 'en-US';
+      }
       
       // Set other properties
       utterance.rate = options.rate || 1;
@@ -83,6 +95,7 @@ class SpeechSynthesisService {
       
       utterance.onerror = (event) => {
         this.speaking = false;
+        console.error("Speech synthesis error:", event);
         reject(new Error(`Speech synthesis error: ${event.error}`));
       };
       

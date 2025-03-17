@@ -48,7 +48,7 @@ const VoiceAssistant: React.FC = () => {
   const speakText = async (text: string, language: string = selectedLanguage || "en") => {
     try {
       await speechSynthesis.current.speak(text, {
-        language: language,
+        language,
         rate: 1,
         pitch: 1
       });
@@ -78,6 +78,8 @@ const VoiceAssistant: React.FC = () => {
               handleLanguageSelect(detectedLang);
             } else {
               toast.error("Language not recognized. Please select one from the options.");
+              setIsRecording(false);
+              setVoicePromptActive(false);
             }
           } else if (forStep === "category") {
             const detectedCat = detectCategory(text, selectedLanguage || "en");
@@ -85,6 +87,8 @@ const VoiceAssistant: React.FC = () => {
               handleCategorySelect(detectedCat);
             } else {
               toast.error(getText('selectCategory') + ". " + getText('errorSpeechRecognition'));
+              setIsRecording(false);
+              setVoicePromptActive(false);
             }
           }
         }
@@ -99,6 +103,7 @@ const VoiceAssistant: React.FC = () => {
         setIsRecording(false);
         setVoicePromptActive(false);
         toast.error(getText('errorSpeechRecognition'));
+        console.error("Speech recognition error:", error);
       }
     );
   };
@@ -113,28 +118,40 @@ const VoiceAssistant: React.FC = () => {
     // Speak language confirmation message
     await speakText(translations.languageConfirmation[language as keyof typeof translations.languageConfirmation], language);
     
-    // Move to next step
+    // Move to next step immediately to reduce delay
     setCurrentStep(Step.CategorySelection);
     
     // After a short delay, speak the category question
     setTimeout(async () => {
       await speakText(translations.categoryQuestion[language as keyof typeof translations.categoryQuestion], language);
-      // Auto start voice response for category
+      // Auto start voice response for category after speaking
       setTimeout(() => {
         handleVoiceResponse("category");
-      }, 500);
-    }, 500);
+      }, 300);
+    }, 300);
   };
   
   // Handle category selection
   const handleCategorySelect = async (category: string) => {
     setSelectedCategory(category);
     
-    // Speak issue prompt message
-    await speakText(translations.issuePrompt[selectedLanguage as keyof typeof translations.issuePrompt]);
+    // Get localized category name if available
+    const categoryName = translations.categories[category as keyof typeof translations.categories]?.[selectedLanguage as keyof typeof translations.categories.loan] || category;
     
-    // Move to next step
+    // Format the confirmation message with the category name
+    const message = translations.categoryConfirmation[selectedLanguage as keyof typeof translations.categoryConfirmation]
+      .replace("{category}", categoryName);
+    
+    // Speak category confirmation message
+    await speakText(message);
+    
+    // Move to next step immediately to reduce delay
     setCurrentStep(Step.IssueDescription);
+    
+    // After a short delay, speak the issue prompt
+    setTimeout(async () => {
+      await speakText(translations.issuePrompt[selectedLanguage as keyof typeof translations.issuePrompt]);
+    }, 300);
   };
   
   // Handle microphone button click
@@ -170,6 +187,7 @@ const VoiceAssistant: React.FC = () => {
           (error) => {
             setIsRecording(false);
             toast.error(getText('errorSpeechRecognition'));
+            console.error("Speech recognition error:", error);
           }
         );
       }
@@ -185,18 +203,24 @@ const VoiceAssistant: React.FC = () => {
     
     setIsProcessing(true);
     
+    // Get speech in the selected language but save in English for the backend
+    const userIssueForDisplay = userIssue;
+    
     // Simulate AI processing to generate a summary
     // In a real implementation, this would call an AI service
     setTimeout(() => {
       // Create a simplified summary from the user's issue
       // This is a very basic implementation - in reality you'd use an LLM
-      const summary = generateSummary(userIssue, selectedLanguage as string);
+      const summary = generateSummary(userIssueForDisplay, selectedLanguage as string);
       setIssueSummary(summary);
       
-      // Move to confirmation step
+      // Speak the generated summary
+      speakText(summary);
+      
+      // Move to confirmation step immediately
       setCurrentStep(Step.Confirmation);
       setIsProcessing(false);
-    }, 2000);
+    }, 1000); // Reduced delay time
   };
   
   // Generate a simplified summary (mock implementation)
@@ -222,16 +246,27 @@ const VoiceAssistant: React.FC = () => {
     const randomId = Math.floor(100000 + Math.random() * 900000).toString();
     setTicketId(randomId);
     
-    // Simulate ticket creation
+    // Get confirmation message in the selected language
+    const confirmationMsg = getText('confirmSummary');
+    speakText(confirmationMsg);
+    
+    // Simulate ticket creation with reduced delay
     setTimeout(() => {
       setCurrentStep(Step.TicketCreated);
       setIsProcessing(false);
-    }, 1500);
+      
+      // Speak the ticket created message
+      const ticketMsg = getText('ticketCreated');
+      speakText(ticketMsg);
+    }, 800); // Reduced delay time
   };
   
   // Handle edit (go back to issue description)
   const handleEditSummary = () => {
     setCurrentStep(Step.IssueDescription);
+    
+    // Speak the issue prompt again
+    speakText(getText('describeIssue'));
   };
   
   // Reset the form to create a new ticket
@@ -241,6 +276,24 @@ const VoiceAssistant: React.FC = () => {
     setUserIssue("");
     setIssueSummary("");
     setCurrentStep(Step.LanguageSelection);
+    
+    // Speak welcome message again
+    setTimeout(() => {
+      speakWelcomeSequence();
+    }, 300);
+  };
+  
+  // Function to speak the welcome sequence in all languages
+  const speakWelcomeSequence = async () => {
+    // Speak all welcome messages in sequence
+    await speakText(translations.welcomeMessage.en, "en");
+    await speakText(translations.welcomeMessage.hi, "hi");
+    await speakText(translations.welcomeMessage.mr, "mr");
+    
+    // After all messages are spoken, automatically activate voice response
+    setTimeout(() => {
+      handleVoiceResponse("language");
+    }, 300);
   };
   
   // Cleanup on unmount
@@ -251,7 +304,7 @@ const VoiceAssistant: React.FC = () => {
     };
   }, []);
   
-  // Speaker microphone access on initial load
+  // Request microphone access on initial load
   useEffect(() => {
     const requestMicrophonePermission = async () => {
       try {
@@ -266,16 +319,8 @@ const VoiceAssistant: React.FC = () => {
   
   // Speak welcome message on initial load
   useEffect(() => {
-    const welcomeTimeout = setTimeout(async () => {
-      // Speak all welcome messages in sequence
-      await speakText(translations.welcomeMessage.en, "en");
-      await speakText(translations.welcomeMessage.hi, "hi");
-      await speakText(translations.welcomeMessage.mr, "mr");
-      
-      // After all messages are spoken, automatically activate voice response
-      setTimeout(() => {
-        handleVoiceResponse("language");
-      }, 500);
+    const welcomeTimeout = setTimeout(() => {
+      speakWelcomeSequence();
     }, 1000);
     
     return () => clearTimeout(welcomeTimeout);

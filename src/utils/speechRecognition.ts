@@ -27,6 +27,7 @@ class SpeechRecognitionService {
   language: string = 'en-US';
   
   constructor() {
+    // @ts-ignore - The types are not defined in TypeScript
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
@@ -38,6 +39,7 @@ class SpeechRecognitionService {
     this.recognition.continuous = false;
     this.recognition.interimResults = true;
     this.recognition.lang = this.language;
+    this.recognition.maxAlternatives = 1;
   }
   
   setLanguage(languageCode: string) {
