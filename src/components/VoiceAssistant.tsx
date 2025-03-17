@@ -3,8 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import LanguageSelector from "./LanguageSelector";
 import CategorySelector from "./CategorySelector";
 import MicrophoneButton from "./MicrophoneButton";
@@ -13,6 +12,8 @@ import TicketCreated from "./TicketCreated";
 import { getSpeechRecognition } from "@/utils/speechRecognition";
 import { getSpeechSynthesis } from "@/utils/speechSynthesis";
 import { translations } from "@/utils/translations";
+import { detectLanguage } from "@/utils/languageDetection";
+import { detectCategory } from "@/utils/categoryDetection";
 
 enum Step {
   LanguageSelection = "language",
@@ -31,6 +32,8 @@ const VoiceAssistant: React.FC = () => {
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [ticketId, setTicketId] = useState<string>("");
+  const [voicePromptActive, setVoicePromptActive] = useState<boolean>(false);
+  const [voiceResponseText, setVoiceResponseText] = useState<string>("");
   
   const speechRecognition = useRef(getSpeechRecognition());
   const speechSynthesis = useRef(getSpeechSynthesis());
@@ -42,18 +45,62 @@ const VoiceAssistant: React.FC = () => {
   };
   
   // Function to speak text with the selected language
-  const speakText = async (text: string) => {
-    if (!selectedLanguage) return;
-    
+  const speakText = async (text: string, language: string = selectedLanguage || "en") => {
     try {
       await speechSynthesis.current.speak(text, {
-        language: selectedLanguage,
+        language: language,
         rate: 1,
         pitch: 1
       });
     } catch (error) {
       console.error('Speech synthesis error:', error);
     }
+  };
+  
+  // Handles recording of voice responses for both language and category selection
+  const handleVoiceResponse = (forStep: "language" | "category") => {
+    setVoicePromptActive(true);
+    setVoiceResponseText("");
+    setIsRecording(true);
+    
+    const lang = forStep === "language" ? "en" : selectedLanguage || "en";
+    
+    speechRecognition.current.setLanguage(lang);
+    speechRecognition.current.start(
+      // onResult callback
+      (text, isFinal) => {
+        setVoiceResponseText(text);
+        
+        if (isFinal) {
+          if (forStep === "language") {
+            const detectedLang = detectLanguage(text);
+            if (detectedLang) {
+              handleLanguageSelect(detectedLang);
+            } else {
+              toast.error("Language not recognized. Please select one from the options.");
+            }
+          } else if (forStep === "category") {
+            const detectedCat = detectCategory(text, selectedLanguage || "en");
+            if (detectedCat) {
+              handleCategorySelect(detectedCat);
+            } else {
+              toast.error(getText('selectCategory') + ". " + getText('errorSpeechRecognition'));
+            }
+          }
+        }
+      },
+      // onEnd callback
+      () => {
+        setIsRecording(false);
+        setVoicePromptActive(false);
+      },
+      // onError callback
+      (error) => {
+        setIsRecording(false);
+        setVoicePromptActive(false);
+        toast.error(getText('errorSpeechRecognition'));
+      }
+    );
   };
   
   // Handle language selection
@@ -64,14 +111,18 @@ const VoiceAssistant: React.FC = () => {
     speechRecognition.current.setLanguage(language);
     
     // Speak language confirmation message
-    await speakText(translations.languageConfirmation[language as keyof typeof translations.languageConfirmation]);
+    await speakText(translations.languageConfirmation[language as keyof typeof translations.languageConfirmation], language);
     
     // Move to next step
     setCurrentStep(Step.CategorySelection);
     
     // After a short delay, speak the category question
     setTimeout(async () => {
-      await speakText(translations.categoryQuestion[language as keyof typeof translations.categoryQuestion]);
+      await speakText(translations.categoryQuestion[language as keyof typeof translations.categoryQuestion], language);
+      // Auto start voice response for category
+      setTimeout(() => {
+        handleVoiceResponse("category");
+      }, 500);
     }, 500);
   };
   
@@ -92,28 +143,36 @@ const VoiceAssistant: React.FC = () => {
       // Stop recording
       speechRecognition.current.stop();
       setIsRecording(false);
+      setVoicePromptActive(false);
     } else {
-      // Start recording
-      setIsRecording(true);
-      
-      speechRecognition.current.start(
-        // onResult callback
-        (text, isFinal) => {
-          if (isFinal) {
-            setUserIssue(text);
+      // Start recording based on current step
+      if (currentStep === Step.LanguageSelection) {
+        handleVoiceResponse("language");
+      } else if (currentStep === Step.CategorySelection) {
+        handleVoiceResponse("category");
+      } else {
+        // Regular issue description
+        setIsRecording(true);
+        
+        speechRecognition.current.start(
+          // onResult callback
+          (text, isFinal) => {
+            if (isFinal) {
+              setUserIssue(text);
+            }
+          },
+          // onEnd callback
+          () => {
+            setIsRecording(false);
+            handleIssueRecorded();
+          },
+          // onError callback
+          (error) => {
+            setIsRecording(false);
+            toast.error(getText('errorSpeechRecognition'));
           }
-        },
-        // onEnd callback
-        () => {
-          setIsRecording(false);
-          handleIssueRecorded();
-        },
-        // onError callback
-        (error) => {
-          setIsRecording(false);
-          toast.error(getText('errorSpeechRecognition'));
-        }
-      );
+        );
+      }
     }
   };
   
@@ -207,8 +266,16 @@ const VoiceAssistant: React.FC = () => {
   
   // Speak welcome message on initial load
   useEffect(() => {
-    const welcomeTimeout = setTimeout(() => {
-      speakText(translations.welcomeMessage.en);
+    const welcomeTimeout = setTimeout(async () => {
+      // Speak all welcome messages in sequence
+      await speakText(translations.welcomeMessage.en, "en");
+      await speakText(translations.welcomeMessage.hi, "hi");
+      await speakText(translations.welcomeMessage.mr, "mr");
+      
+      // After all messages are spoken, automatically activate voice response
+      setTimeout(() => {
+        handleVoiceResponse("language");
+      }, 500);
     }, 1000);
     
     return () => clearTimeout(welcomeTimeout);
@@ -249,21 +316,61 @@ const VoiceAssistant: React.FC = () => {
           >
             <AnimatePresence mode="wait">
               <TabsContent value={Step.LanguageSelection} className="mt-0 space-y-8">
+                {voicePromptActive && (
+                  <motion.div 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    className="text-center mb-4 p-4 bg-primary/10 rounded-lg"
+                  >
+                    <p className="mb-2 font-medium">{translations.listeningMessage[selectedLanguage as keyof typeof translations.listeningMessage || "en"]}</p>
+                    {voiceResponseText && (
+                      <p className="italic text-sm">"{voiceResponseText}"</p>
+                    )}
+                  </motion.div>
+                )}
                 <LanguageSelector
                   selectedLanguage={selectedLanguage}
                   onSelect={handleLanguageSelect}
                   className="mt-6"
                 />
+                <div className="flex justify-center mt-6">
+                  <MicrophoneButton
+                    isRecording={isRecording}
+                    isProcessing={isProcessing}
+                    onClick={handleMicrophoneClick}
+                  />
+                </div>
               </TabsContent>
               
               <TabsContent value={Step.CategorySelection} className="mt-0 space-y-8">
                 {selectedLanguage && (
-                  <CategorySelector
-                    language={selectedLanguage}
-                    selectedCategory={selectedCategory}
-                    onSelect={handleCategorySelect}
-                    className="mt-6"
-                  />
+                  <>
+                    {voicePromptActive && (
+                      <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        className="text-center mb-4 p-4 bg-primary/10 rounded-lg"
+                      >
+                        <p className="mb-2 font-medium">{translations.listeningMessage[selectedLanguage as keyof typeof translations.listeningMessage]}</p>
+                        {voiceResponseText && (
+                          <p className="italic text-sm">"{voiceResponseText}"</p>
+                        )}
+                      </motion.div>
+                    )}
+                    <CategorySelector
+                      language={selectedLanguage}
+                      selectedCategory={selectedCategory}
+                      onSelect={handleCategorySelect}
+                      className="mt-6"
+                    />
+                    <div className="flex justify-center mt-6">
+                      <MicrophoneButton
+                        isRecording={isRecording}
+                        isProcessing={isProcessing}
+                        onClick={handleMicrophoneClick}
+                      />
+                    </div>
+                  </>
                 )}
               </TabsContent>
               
