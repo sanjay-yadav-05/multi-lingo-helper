@@ -40,10 +40,13 @@ const VoiceAssistant: React.FC = () => {
   
   // Helper function to get text based on current language
   const getText = (key: keyof typeof translations) => {
-    // Skip accessing the categories key directly, handle it separately
+    // Special handling for categories key which has a nested structure
     if (key === 'categories') {
-      // Just return an empty object if trying to access categories directly
-      return {};
+      // Return a function that allows access to the nested category structure
+      return (categoryKey: string): string => {
+        if (!selectedLanguage) return translations.categories[categoryKey as keyof typeof translations.categories]?.en || categoryKey;
+        return translations.categories[categoryKey as keyof typeof translations.categories]?.[selectedLanguage as keyof typeof translations.categories.loan] || categoryKey;
+      };
     }
     
     if (!selectedLanguage) return translations[key].en;
@@ -92,7 +95,7 @@ const VoiceAssistant: React.FC = () => {
             if (detectedCat) {
               handleCategorySelect(detectedCat);
             } else {
-              toast.error(getText('selectCategory') + ". " + getText('errorSpeechRecognition'));
+              toast.error(getText('selectCategory') as string + ". " + getText('errorSpeechRecognition') as string);
               setIsRecording(false);
               setVoicePromptActive(false);
             }
@@ -108,7 +111,7 @@ const VoiceAssistant: React.FC = () => {
       (error) => {
         setIsRecording(false);
         setVoicePromptActive(false);
-        toast.error(getText('errorSpeechRecognition'));
+        toast.error(getText('errorSpeechRecognition') as string);
         console.error("Speech recognition error:", error);
       }
     );
@@ -142,7 +145,8 @@ const VoiceAssistant: React.FC = () => {
     setSelectedCategory(category);
     
     // Get localized category name if available
-    const categoryName = translations.categories[category as keyof typeof translations.categories]?.[selectedLanguage as keyof typeof translations.categories.loan] || category;
+    const getCategoryName = getText('categories') as (cat: string) => string;
+    const categoryName = getCategoryName(category);
     
     // Format the confirmation message with the category name
     const message = translations.categoryConfirmation[selectedLanguage as keyof typeof translations.categoryConfirmation]
@@ -192,7 +196,7 @@ const VoiceAssistant: React.FC = () => {
           // onError callback
           (error) => {
             setIsRecording(false);
-            toast.error(getText('errorSpeechRecognition'));
+            toast.error(getText('errorSpeechRecognition') as string);
             console.error("Speech recognition error:", error);
           }
         );
@@ -253,7 +257,7 @@ const VoiceAssistant: React.FC = () => {
     setTicketId(randomId);
     
     // Get confirmation message in the selected language
-    const confirmationMsg = getText('confirmSummary');
+    const confirmationMsg = getText('confirmSummary') as string;
     speakText(confirmationMsg);
     
     // Simulate ticket creation with reduced delay
@@ -262,7 +266,7 @@ const VoiceAssistant: React.FC = () => {
       setIsProcessing(false);
       
       // Speak the ticket created message
-      const ticketMsg = getText('ticketCreated');
+      const ticketMsg = getText('ticketCreated') as string;
       speakText(ticketMsg);
     }, 800); // Reduced delay time
   };
@@ -272,7 +276,7 @@ const VoiceAssistant: React.FC = () => {
     setCurrentStep(Step.IssueDescription);
     
     // Speak the issue prompt again
-    speakText(getText('describeIssue'));
+    speakText(getText('describeIssue') as string);
   };
   
   // Reset the form to create a new ticket
@@ -336,15 +340,15 @@ const VoiceAssistant: React.FC = () => {
   const getStepTitle = () => {
     switch (currentStep) {
       case Step.LanguageSelection:
-        return getText('selectLanguage');
+        return getText('selectLanguage') as string;
       case Step.CategorySelection:
-        return getText('selectCategory');
+        return getText('selectCategory') as string;
       case Step.IssueDescription:
-        return getText('describeIssue');
+        return getText('describeIssue') as string;
       case Step.Confirmation:
-        return getText('confirmSummary');
+        return getText('confirmSummary') as string;
       case Step.TicketCreated:
-        return getText('ticketCreated');
+        return getText('ticketCreated') as string;
       default:
         return '';
     }
