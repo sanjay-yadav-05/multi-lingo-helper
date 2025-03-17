@@ -22,12 +22,12 @@ export const detectCategory = (text: string, language: string): string | null =>
       'other': ['अन्य', 'दूसरा', 'और', 'other', 'anya']
     },
     'mr': {
-      'loan': ['कर्ज', 'लोन', 'व्याज', 'ईएमआय', 'karj', 'loan'],
-      'savings': ['बचत खाते', 'बचत', 'जमा', 'bachat', 'saving'],
-      'current': ['चालू खाते', 'व्यावसायिक खाते', 'chalu khate', 'current'],
-      'creditcard': ['क्रेडिट कार्ड', 'कार्ड', 'पेमेंट कार्ड', 'card', 'credit card'],
-      'fraud': ['फसवणूक', 'अनधिकृत', 'चोरी', 'हॅक', 'fraud', 'fasvanuk'],
-      'other': ['इतर', 'दुसरे', 'वेगळे', 'other', 'itar']
+      'loan': ['कर्ज', 'लोन', 'व्याज', 'ईएमआय', 'karj', 'loan', 'कर्जे', 'कर्जाचे'],
+      'savings': ['बचत खाते', 'बचत', 'जमा', 'bachat', 'saving', 'बचतीचे खाते', 'बचत खात्याची'],
+      'current': ['चालू खाते', 'व्यावसायिक खाते', 'chalu khate', 'current', 'चालू खात्याची'],
+      'creditcard': ['क्रेडिट कार्ड', 'कार्ड', 'पेमेंट कार्ड', 'card', 'credit card', 'क्रेडिट कार्डाचे'],
+      'fraud': ['फसवणूक', 'अनधिकृत', 'चोरी', 'हॅक', 'fraud', 'fasvanuk', 'फसवणुकीची'],
+      'other': ['इतर', 'दुसरे', 'वेगळे', 'other', 'itar', 'इतर समस्या', 'इतर प्रकार']
     }
   };
   

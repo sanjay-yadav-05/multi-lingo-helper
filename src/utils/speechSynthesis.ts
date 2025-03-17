@@ -26,6 +26,7 @@ class SpeechSynthesisService {
   
   private loadVoices() {
     this.voices = window.speechSynthesis.getVoices();
+    console.log("Available voices:", this.voices.map(v => `${v.name} (${v.lang})`));
   }
   
   private getVoiceForLanguage(languageCode: string): SpeechSynthesisVoice | null {
@@ -33,23 +34,40 @@ class SpeechSynthesisService {
       this.loadVoices();
     }
     
-    const languageMap: Record<string, string> = {
-      'en': 'en-US',
-      'hi': 'hi-IN',
-      'mr': 'mr-IN'
+    const languageMap: Record<string, string[]> = {
+      'en': ['en-US', 'en-GB', 'en-AU', 'en', 'en-IN'],
+      'hi': ['hi-IN', 'hi'],
+      'mr': ['mr-IN', 'mr', 'hi-IN'] // Fallback to Hindi if Marathi is not available
     };
     
-    const langCode = languageMap[languageCode] || 'en-US';
+    const langCodes = languageMap[languageCode] || ['en-US'];
     
-    // Try to find a matching voice
-    const voice = this.voices.find(voice => 
-      voice.lang.includes(langCode) && voice.localService
-    ) || this.voices.find(voice => 
-      voice.lang.includes(langCode)
-    );
+    // Try to find voices that match any of the language codes
+    for (const langCode of langCodes) {
+      // First try to find a native voice
+      const nativeVoice = this.voices.find(voice => 
+        voice.lang.toLowerCase().includes(langCode.toLowerCase()) && voice.localService
+      );
+      
+      if (nativeVoice) {
+        console.log(`Found native voice for ${languageCode}: ${nativeVoice.name}`);
+        return nativeVoice;
+      }
+      
+      // If no native voice, try any voice for this language
+      const anyVoice = this.voices.find(voice => 
+        voice.lang.toLowerCase().includes(langCode.toLowerCase())
+      );
+      
+      if (anyVoice) {
+        console.log(`Found voice for ${languageCode}: ${anyVoice.name}`);
+        return anyVoice;
+      }
+    }
     
     // Fallback to the first voice if none found
-    return voice || this.voices[0];
+    console.warn(`No voice found for ${languageCode}, using default`);
+    return this.voices[0];
   }
   
   speak(text: string, options: SpeechOptions): Promise<void> {

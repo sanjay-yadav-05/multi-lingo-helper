@@ -50,6 +50,7 @@ class SpeechRecognitionService {
     };
     
     this.language = languageMap[languageCode] || 'en-US';
+    console.log('Setting speech recognition language to:', this.language);
     if (this.recognition) {
       this.recognition.lang = this.language;
     }

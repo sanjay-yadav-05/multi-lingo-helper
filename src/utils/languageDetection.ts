@@ -14,19 +14,28 @@ export const detectLanguage = (text: string): string | null => {
   const isHindi = hindiKeywords.some(keyword => lowercaseText.includes(keyword));
   if (isHindi) return 'hi';
   
-  // Marathi detection
-  const marathiKeywords = ['marathi', 'मराठी', 'speak in marathi', 'मराठी मध्ये', 'मला मराठी हवी', 'marathi madhe'];
+  // Marathi detection - expanded keywords for better detection
+  const marathiKeywords = [
+    'marathi', 'मराठी', 'speak in marathi', 'मराठी मध्ये', 'मला मराठी हवी', 
+    'marathi madhe', 'marathit', 'marathimadhe', 'मराठीत', 'मराठीमध्ये', 'मराठी भाषा'
+  ];
   const isMarathi = marathiKeywords.some(keyword => lowercaseText.includes(keyword));
   if (isMarathi) return 'mr';
   
   // If no language is detected from keywords, try to guess based on script
   if (/[\u0900-\u097F]/.test(text)) {
     // Devanagari script - could be Hindi or Marathi
-    // Simple heuristic - more Hindi-specific characters
-    if (/[कखगघङचछजझञटठडढणतथदधन]/.test(text)) {
-      return 'hi';
-    } else {
+    // Enhanced heuristic for distinguishing between Hindi and Marathi
+    const marathiSpecificChars = /[ळऴ]/; // Characters more common in Marathi
+    if (marathiSpecificChars.test(text)) {
       return 'mr';
+    } else {
+      // Simple heuristic - more Hindi-specific characters
+      if (/[कखगघङचछजझञटठडढणतथदधन]/.test(text)) {
+        return 'hi';
+      } else {
+        return 'mr';
+      }
     }
   }
   
