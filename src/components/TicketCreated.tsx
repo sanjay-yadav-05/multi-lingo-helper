@@ -2,13 +2,14 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, RotateCcw } from "lucide-react";
+import { CheckCircle2, RotateCcw, ListTodo } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TicketCreatedProps {
   language: string;
   ticketId: string;
   onNewTicket: () => void;
+  onViewDashboard?: () => void;
   className?: string;
 }
 
@@ -16,6 +17,7 @@ const TicketCreated: React.FC<TicketCreatedProps> = ({
   language,
   ticketId,
   onNewTicket,
+  onViewDashboard,
   className,
 }) => {
   const successText = {
@@ -34,6 +36,12 @@ const TicketCreated: React.FC<TicketCreatedProps> = ({
     en: "Create New Ticket",
     hi: "नया टिकट बनाएं",
     mr: "नवीन तिकीट तयार करा"
+  };
+
+  const viewDashboardText = {
+    en: "View Dashboard",
+    hi: "डैशबोर्ड देखें",
+    mr: "डॅशबोर्ड पहा"
   };
 
   const currentLanguage = ["en", "hi", "mr"].includes(language) ? language : "en";
@@ -70,14 +78,27 @@ const TicketCreated: React.FC<TicketCreatedProps> = ({
         </div>
       </div>
       
-      <Button 
-        variant="outline"
-        className="gap-2 mt-4 btn-animation"
-        onClick={onNewTicket}
-      >
-        <RotateCcw className="h-4 w-4" />
-        {newTicketText[currentLanguage as keyof typeof newTicketText]}
-      </Button>
+      <div className="flex gap-3 flex-col sm:flex-row">
+        {onViewDashboard && (
+          <Button 
+            variant="default"
+            className="gap-2 btn-animation"
+            onClick={onViewDashboard}
+          >
+            <ListTodo className="h-4 w-4" />
+            {viewDashboardText[currentLanguage as keyof typeof viewDashboardText]}
+          </Button>
+        )}
+        
+        <Button 
+          variant="outline"
+          className="gap-2 btn-animation"
+          onClick={onNewTicket}
+        >
+          <RotateCcw className="h-4 w-4" />
+          {newTicketText[currentLanguage as keyof typeof newTicketText]}
+        </Button>
+      </div>
     </motion.div>
   );
 };

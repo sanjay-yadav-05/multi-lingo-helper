@@ -8,24 +8,27 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import CreateTicket from "./pages/CreateTicket";
 import NotFound from "./pages/NotFound";
+import { TicketProvider } from "./context/TicketContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/index" element={<Index />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/create-ticket" element={<CreateTicket />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <TicketProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/index" element={<Index />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/create-ticket" element={<CreateTicket />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TicketProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

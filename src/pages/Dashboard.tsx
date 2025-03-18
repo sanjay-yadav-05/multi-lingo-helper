@@ -13,63 +13,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import AppointmentBookingDialog from "@/components/AppointmentBookingDialog";
 import FeedbackDialog from "@/components/FeedbackDialog";
-
-// Define ticket type to include feedbackGiven property
-interface Ticket {
-  id: string;
-  category: string;
-  description: string;
-  status: string;
-  date: string;
-  language: string;
-  appointmentBooked: boolean;
-  feedbackGiven?: boolean; // Added feedbackGiven as optional property
-}
-
-// Mock data for tickets, in a real app this would come from an API
-const mockTickets: Ticket[] = [
-  {
-    id: "123456",
-    category: "loan",
-    description: "Loan application status inquiry",
-    status: "pending",
-    date: "2023-06-15",
-    language: "en",
-    appointmentBooked: false,
-  },
-  {
-    id: "234567",
-    category: "savings",
-    description: "Interest rate query for savings account",
-    status: "approved",
-    date: "2023-06-10",
-    language: "hi",
-    appointmentBooked: false,
-  },
-  {
-    id: "345678",
-    category: "fraud",
-    description: "Unauthorized transaction report",
-    status: "resolved",
-    date: "2023-06-05",
-    language: "en",
-    appointmentBooked: false,
-    feedbackGiven: false,
-  },
-  {
-    id: "456789",
-    category: "creditcard",
-    description: "Credit card limit increase request",
-    status: "in_progress",
-    date: "2023-06-01",
-    language: "mr",
-    appointmentBooked: true,
-  },
-];
+import { useTickets, Ticket } from "@/context/TicketContext";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
+  const { tickets, updateTicket } = useTickets();
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -85,13 +33,7 @@ const Dashboard = () => {
   
   const handleAppointmentBooked = (ticketId: string) => {
     // Update ticket status to "in_progress" and mark appointment as booked
-    setTickets(prev => 
-      prev.map(ticket => 
-        ticket.id === ticketId 
-          ? { ...ticket, status: "in_progress", appointmentBooked: true }
-          : ticket
-      )
-    );
+    updateTicket(ticketId, { status: "in_progress", appointmentBooked: true });
     setIsBookingOpen(false);
     setSelectedTicket(null);
   };
@@ -107,13 +49,7 @@ const Dashboard = () => {
     setSelectedTicket(null);
     
     // Update ticket to show feedback has been given
-    setTickets(prev => 
-      prev.map(ticket => 
-        ticket.id === ticketId 
-          ? { ...ticket, feedbackGiven: true }
-          : ticket
-      )
-    );
+    updateTicket(ticketId, { feedbackGiven: true });
   };
 
   // Translate category keys to display names
