@@ -37,6 +37,7 @@ const VoiceAssistant: React.FC = () => {
   
   const speechRecognition = useRef(getSpeechRecognition());
   const speechSynthesis = useRef(getSpeechSynthesis());
+  const hasSpokenIssuePrompt = useRef(false);
   
   // Helper function to get text based on current language
   const getText = (key: keyof typeof translations) => {
@@ -164,12 +165,23 @@ const VoiceAssistant: React.FC = () => {
       console.log("Moving to issue description step");
       setCurrentStep(Step.IssueDescription);
       
-      // After a short delay, speak the issue prompt
+      // Reset flag when moving to issue description step
+      hasSpokenIssuePrompt.current = false;
+    }, 300);
+  };
+  
+  // Effect to handle the issue prompt speaking once when entering the issue description step
+  useEffect(() => {
+    if (currentStep === Step.IssueDescription && !hasSpokenIssuePrompt.current) {
+      // Set the flag to true to avoid repeating
+      hasSpokenIssuePrompt.current = true;
+      
+      // Speak the issue prompt after a short delay
       setTimeout(async () => {
         await speakText(translations.issuePrompt[selectedLanguage as keyof typeof translations.issuePrompt]);
       }, 300);
-    }, 300);
-  };
+    }
+  }, [currentStep, selectedLanguage]);
   
   // Handle microphone button click
   const handleMicrophoneClick = () => {
@@ -297,8 +309,8 @@ const VoiceAssistant: React.FC = () => {
   const handleEditSummary = () => {
     setCurrentStep(Step.IssueDescription);
     
-    // Speak the issue prompt again
-    speakText(getText('describeIssue') as string);
+    // Reset flag when going back to issue description
+    hasSpokenIssuePrompt.current = false;
   };
   
   // Reset the form to create a new ticket
