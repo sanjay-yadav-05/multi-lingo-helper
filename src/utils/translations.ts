@@ -6,9 +6,9 @@ export const translations = {
     mr: "नमस्कार! तुम्ही कोणत्या भाषेत बोलू इच्छिता?"
   },
   languageConfirmation: {
-    en: "You've selected English. Please tell me which category your issue is related to.",
-    hi: "आपने हिंदी चुना है। कृपया बताएं कि आपकी समस्या किस श्रेणी से संबंधित है।",
-    mr: "तुम्ही मराठी निवडली आहे. कृपया तुमची समस्या कोणत्या प्रकारची आहे ते सांगा."
+    en: "You've selected English.",
+    hi: "आपने हिंदी चुना है।",
+    mr: "तुम्ही मराठी निवडली आहे."
   },
   categoryQuestion: {
     en: "What is your issue related to? Some common options are: Loan, Savings Account, Current Account, Credit Card, Fraud Report, or Other.",
@@ -16,9 +16,9 @@ export const translations = {
     mr: "तुमची समस्या कोणत्या प्रकारची आहे? पर्याय आहेत: कर्ज, बचत खाते, चालू खाते, क्रेडिट कार्ड, फसवणूक अहवाल, किंवा इतर."
   },
   categoryConfirmation: {
-    en: "You've selected the {category} category. Please briefly describe your issue so we can assist you better.",
-    hi: "आपने {category} श्रेणी का चयन किया है। कृपया अपनी समस्या का संक्षेप में वर्णन करें ताकि हम आपकी बेहतर सहायता कर सकें।",
-    mr: "तुम्ही {category} श्रेणी निवडली आहे. कृपया तुमच्या समस्येचे थोडक्यात वर्णन करा जेणेकरून आम्ही तुम्हाला अधिक चांगल्या प्रकारे मदत करू शकू."
+    en: "You've selected the {category} category. ",
+    hi: "आपने {category} श्रेणी का चयन किया है।",
+    mr: "तुम्ही {category} श्रेणी निवडली आहे."
   },
   issuePrompt: {
     en: "Please briefly describe your issue so we can assist you better.",
