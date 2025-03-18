@@ -263,7 +263,7 @@ const VoiceAssistant: React.FC = () => {
 
 
 const MONGO_URI = "mongodb+srv://yadav-sanjay:S%40nj%40yy%40d%40v%408483@cluster0.q4ojo.mongodb.net/"; // Store in .env for security
-  const insertIssue = async (issueSummary) => {
+  const insertIssue = async (issueSummary: string) => {
     if (!issueSummary) return;
 
     const client = new MongoClient(MONGO_URI);
