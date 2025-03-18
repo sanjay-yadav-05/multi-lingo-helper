@@ -32,8 +32,20 @@ const Dashboard = () => {
   };
   
   const handleAppointmentBooked = (ticketId: string) => {
+    // Get current date and add 5 days for the appointment
+    const currentDate = new Date();
+    const appointmentDate = new Date(currentDate);
+    appointmentDate.setDate(currentDate.getDate() + 5);
+    
+    // Format the appointment date and time
+    const appointmentDateTime = `${appointmentDate.getFullYear()}-${String(appointmentDate.getMonth() + 1).padStart(2, '0')}-${String(appointmentDate.getDate()).padStart(2, '0')} ${String(appointmentDate.getHours()).padStart(2, '0')}:${String(appointmentDate.getMinutes()).padStart(2, '0')}`;
+    
     // Update ticket status to "in_progress" and mark appointment as booked
-    updateTicket(ticketId, { status: "in_progress", appointmentBooked: true });
+    updateTicket(ticketId, { 
+      status: "in_progress", 
+      appointmentBooked: true,
+      appointmentDateTime: appointmentDateTime
+    });
     setIsBookingOpen(false);
     setSelectedTicket(null);
   };
@@ -135,7 +147,12 @@ const Dashboard = () => {
                       {ticket.appointmentBooked && (
                         <div className="flex items-center gap-1 text-blue-600">
                           <Clock className="h-3 w-3" />
-                          <span>Appointment Booked</span>
+                          <span>
+                            Appointment Booked
+                            {ticket.status === "in_progress" && ticket.appointmentDateTime && (
+                              <span className="ml-1">({ticket.appointmentDateTime})</span>
+                            )}
+                          </span>
                         </div>
                       )}
                     </div>

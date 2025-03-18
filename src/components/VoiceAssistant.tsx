@@ -216,7 +216,7 @@ const VoiceAssistant: React.FC = () => {
     console.log("Processing issue:", userIssueForDisplay);
     
     setTimeout(() => {
-      const summary = generateSummary(userIssueForDisplay, selectedLanguage as string);
+      const summary = userIssueForDisplay;
       setIssueSummary(summary);
       
       speakText(summary);
@@ -224,16 +224,6 @@ const VoiceAssistant: React.FC = () => {
       setCurrentStep(Step.Confirmation);
       setIsProcessing(false);
     }, 1000);
-  };
-  
-  const generateSummary = (issue: string, language: string): string => {
-    const prefixes = {
-      en: "User reports: ",
-      hi: "उपयोगकर्ता रिपोर्ट: ",
-      mr: "वापरकर्ता अहवाल: "
-    };
-    
-    return `${prefixes[language as keyof typeof prefixes]}${issue}`;
   };
   
   const handleConfirmSummary = () => {
@@ -245,7 +235,8 @@ const VoiceAssistant: React.FC = () => {
     const confirmationMsg = getText('confirmSummary') as string;
     speakText(confirmationMsg);
     
-    const currentDate = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const currentDate = `2025-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     
     addTicket({
       id: randomId,

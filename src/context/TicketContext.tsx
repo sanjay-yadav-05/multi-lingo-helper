@@ -10,6 +10,7 @@ export interface Ticket {
   date: string;
   language: string;
   appointmentBooked: boolean;
+  appointmentDateTime?: string;
   feedbackGiven?: boolean;
 }
 
@@ -20,7 +21,7 @@ const initialTickets: Ticket[] = [
     category: "loan",
     description: "Loan application status inquiry",
     status: "pending",
-    date: "2023-06-15",
+    date: "2025-06-15",
     language: "en",
     appointmentBooked: false,
   },
@@ -29,7 +30,7 @@ const initialTickets: Ticket[] = [
     category: "savings",
     description: "Interest rate query for savings account",
     status: "approved",
-    date: "2023-06-10",
+    date: "2025-06-10",
     language: "hi",
     appointmentBooked: false,
   },
@@ -38,7 +39,7 @@ const initialTickets: Ticket[] = [
     category: "fraud",
     description: "Unauthorized transaction report",
     status: "resolved",
-    date: "2023-06-05",
+    date: "2025-06-05",
     language: "en",
     appointmentBooked: false,
     feedbackGiven: false,
@@ -48,9 +49,10 @@ const initialTickets: Ticket[] = [
     category: "creditcard",
     description: "Credit card limit increase request",
     status: "in_progress",
-    date: "2023-06-01",
+    date: "2025-06-01",
     language: "mr",
     appointmentBooked: true,
+    appointmentDateTime: "2025-06-10 14:30",
   },
 ];
 
@@ -78,7 +80,7 @@ export const TicketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [tickets, setTickets] = useState<Ticket[]>(initialTickets);
 
   const addTicket = (ticket: Ticket) => {
-    setTickets((prevTickets) => [...prevTickets, ticket]);
+    setTickets((prevTickets) => [ticket, ...prevTickets]);
   };
 
   const updateTicket = (id: string, updates: Partial<Ticket>) => {
