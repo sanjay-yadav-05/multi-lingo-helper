@@ -14,8 +14,20 @@ import { useNavigate } from "react-router-dom";
 import AppointmentBookingDialog from "@/components/AppointmentBookingDialog";
 import FeedbackDialog from "@/components/FeedbackDialog";
 
+// Define ticket type to include feedbackGiven property
+interface Ticket {
+  id: string;
+  category: string;
+  description: string;
+  status: string;
+  date: string;
+  language: string;
+  appointmentBooked: boolean;
+  feedbackGiven?: boolean; // Added feedbackGiven as optional property
+}
+
 // Mock data for tickets, in a real app this would come from an API
-const mockTickets = [
+const mockTickets: Ticket[] = [
   {
     id: "123456",
     category: "loan",
@@ -42,6 +54,7 @@ const mockTickets = [
     date: "2023-06-05",
     language: "en",
     appointmentBooked: false,
+    feedbackGiven: false,
   },
   {
     id: "456789",
@@ -56,7 +69,7 @@ const mockTickets = [
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [tickets, setTickets] = useState(mockTickets);
+  const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
