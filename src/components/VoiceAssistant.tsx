@@ -283,6 +283,10 @@ const VoiceAssistant: React.FC = () => {
     }, 300);
   };
   
+  const handleViewDashboard = () => {
+    navigate("/dashboard");
+  };
+  
   const speakWelcomeSequence = async () => {
     await speakText(translations.welcomeMessage.en, "en");
     await speakText(translations.welcomeMessage.hi, "hi");
