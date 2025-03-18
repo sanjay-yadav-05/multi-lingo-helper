@@ -16,7 +16,7 @@ export const translations = {
     mr: "तुमची समस्या कोणत्या प्रकारची आहे? पर्याय आहेत: कर्ज, बचत खाते, चालू खाते, क्रेडिट कार्ड, फसवणूक अहवाल, किंवा इतर."
   },
   categoryConfirmation: {
-    en: "You've selected the {category} category. ",
+    en: "You've selected the {category} category.",
     hi: "आपने {category} श्रेणी का चयन किया है।",
     mr: "तुम्ही {category} श्रेणी निवडली आहे."
   },
