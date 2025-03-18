@@ -15,6 +15,7 @@ import { detectLanguage } from "@/utils/languageDetection";
 import { detectCategory } from "@/utils/categoryDetection";
 import { useNavigate } from "react-router-dom";
 import { useTickets } from "@/context/TicketContext";
+import { MongoClient } from "mongodb";
 
 enum Step {
   LanguageSelection = "language",
@@ -248,6 +249,7 @@ const VoiceAssistant: React.FC = () => {
       appointmentBooked: false,
     });
     
+    insertIssue(issueSummary);
     setTimeout(() => {
       setCurrentStep(Step.TicketCreated);
       setIsProcessing(false);
@@ -256,6 +258,43 @@ const VoiceAssistant: React.FC = () => {
       speakText(ticketMsg);
     }, 800);
   };
+
+
+
+
+const MONGO_URI = "mongodb+srv://yadav-sanjay:S%40nj%40yy%40d%40v%408483@cluster0.q4ojo.mongodb.net/"; // Store in .env for security
+  const insertIssue = async (issueSummary) => {
+    if (!issueSummary) return;
+
+    const client = new MongoClient(MONGO_URI);
+
+    try {
+        await client.connect();
+        const db = client.db("Query_resolver");
+        const collection = db.collection("QueryStatement");
+
+        const document = {
+            id: `U${Date.now()}`,
+            customerName: "John Doe",
+            accountType: "Premium",
+            netRevenue: Math.floor(Math.random() * 100000),
+            cibilScore: Math.floor(Math.random() * 300) + 600,
+            queryType: "Critical",
+            totalTransactions: Math.floor(Math.random() * 200),
+            description: issueSummary,
+            timestamp: new Date().toISOString(),
+            status: "New",
+        };
+
+        await collection.insertOne(document);
+        console.log("✅ Data Inserted Successfully");
+    } catch (error) {
+        console.error("❌ Failed to insert data:", error);
+    } finally {
+        await client.close();
+    }
+};
+
   
   const handleEditSummary = () => {
     setCurrentStep(Step.IssueDescription);
