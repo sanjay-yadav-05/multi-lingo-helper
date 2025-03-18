@@ -2,9 +2,17 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, ChevronRight, Clock, PlusCircle } from "lucide-react";
+import { 
+  CalendarDays, 
+  ChevronRight, 
+  Clock, 
+  MessageSquare, 
+  PlusCircle, 
+  Star 
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AppointmentBookingDialog from "@/components/AppointmentBookingDialog";
+import FeedbackDialog from "@/components/FeedbackDialog";
 
 // Mock data for tickets, in a real app this would come from an API
 const mockTickets = [
@@ -15,6 +23,7 @@ const mockTickets = [
     status: "pending",
     date: "2023-06-15",
     language: "en",
+    appointmentBooked: false,
   },
   {
     id: "234567",
@@ -23,6 +32,7 @@ const mockTickets = [
     status: "approved",
     date: "2023-06-10",
     language: "hi",
+    appointmentBooked: false,
   },
   {
     id: "345678",
@@ -31,21 +41,25 @@ const mockTickets = [
     status: "resolved",
     date: "2023-06-05",
     language: "en",
+    appointmentBooked: false,
   },
   {
     id: "456789",
     category: "creditcard",
     description: "Credit card limit increase request",
-    status: "approved",
+    status: "in_progress",
     date: "2023-06-01",
     language: "mr",
+    appointmentBooked: true,
   },
 ];
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [tickets, setTickets] = useState(mockTickets);
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const handleCreateTicket = () => {
     navigate("/create-ticket");
@@ -54,6 +68,39 @@ const Dashboard = () => {
   const handleBookAppointment = (ticketId: string) => {
     setSelectedTicket(ticketId);
     setIsBookingOpen(true);
+  };
+  
+  const handleAppointmentBooked = (ticketId: string) => {
+    // Update ticket status to "in_progress" and mark appointment as booked
+    setTickets(prev => 
+      prev.map(ticket => 
+        ticket.id === ticketId 
+          ? { ...ticket, status: "in_progress", appointmentBooked: true }
+          : ticket
+      )
+    );
+    setIsBookingOpen(false);
+    setSelectedTicket(null);
+  };
+  
+  const handleGiveFeedback = (ticketId: string) => {
+    setSelectedTicket(ticketId);
+    setIsFeedbackOpen(true);
+  };
+  
+  const handleFeedbackSubmitted = (ticketId: string) => {
+    // In a real app, you would store the feedback in a database
+    setIsFeedbackOpen(false);
+    setSelectedTicket(null);
+    
+    // Update ticket to show feedback has been given
+    setTickets(prev => 
+      prev.map(ticket => 
+        ticket.id === ticketId 
+          ? { ...ticket, feedbackGiven: true }
+          : ticket
+      )
+    );
   };
 
   // Translate category keys to display names
@@ -77,10 +124,28 @@ const Dashboard = () => {
         return "bg-yellow-100 text-yellow-800";
       case "approved":
         return "bg-green-100 text-green-800";
-      case "resolved":
+      case "in_progress":
         return "bg-blue-100 text-blue-800";
+      case "resolved":
+        return "bg-purple-100 text-purple-800";
       default:
         return "bg-gray-100 text-gray-800";
+    }
+  };
+  
+  // Get status display name
+  const getStatusName = (status: string): string => {
+    switch (status) {
+      case "pending":
+        return "Pending";
+      case "approved":
+        return "Approved";
+      case "in_progress":
+        return "In Progress";
+      case "resolved":
+        return "Resolved";
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1);
     }
   };
 
@@ -96,7 +161,7 @@ const Dashboard = () => {
         </div>
         
         <div className="grid grid-cols-1 gap-4">
-          {mockTickets.map((ticket) => (
+          {tickets.map((ticket) => (
             <Card key={ticket.id} className="transition-all hover:shadow-md">
               <CardContent className="p-0">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-4">
@@ -104,7 +169,7 @@ const Dashboard = () => {
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-xs text-muted-foreground">#{ticket.id}</span>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
-                        {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
+                        {getStatusName(ticket.status)}
                       </span>
                     </div>
                     
@@ -118,20 +183,46 @@ const Dashboard = () => {
                         <CalendarDays className="h-3 w-3" />
                         <span>{ticket.date}</span>
                       </div>
+                      {ticket.appointmentBooked && (
+                        <div className="flex items-center gap-1 text-blue-600">
+                          <Clock className="h-3 w-3" />
+                          <span>Appointment Booked</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
-                  {ticket.status === "approved" && (
-                    <Button 
-                      variant="outline" 
-                      className="mt-4 md:mt-0 gap-2"
-                      onClick={() => handleBookAppointment(ticket.id)}
-                    >
-                      <Clock className="h-4 w-4" />
-                      Book Appointment
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <div className="mt-4 md:mt-0 flex gap-2">
+                    {ticket.status === "approved" && !ticket.appointmentBooked && (
+                      <Button 
+                        variant="outline" 
+                        className="gap-2"
+                        onClick={() => handleBookAppointment(ticket.id)}
+                      >
+                        <Clock className="h-4 w-4" />
+                        Book Appointment
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    )}
+                    
+                    {ticket.status === "resolved" && !ticket.feedbackGiven && (
+                      <Button 
+                        variant="outline" 
+                        className="gap-2"
+                        onClick={() => handleGiveFeedback(ticket.id)}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Give Feedback
+                      </Button>
+                    )}
+                    
+                    {ticket.feedbackGiven && (
+                      <div className="flex items-center gap-1 text-amber-500">
+                        <Star className="h-4 w-4 fill-amber-500" />
+                        <span className="text-xs">Feedback Provided</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -140,14 +231,27 @@ const Dashboard = () => {
       </div>
       
       {selectedTicket && (
-        <AppointmentBookingDialog
-          open={isBookingOpen}
-          ticketId={selectedTicket}
-          onClose={() => {
-            setIsBookingOpen(false);
-            setSelectedTicket(null);
-          }}
-        />
+        <>
+          <AppointmentBookingDialog
+            open={isBookingOpen}
+            ticketId={selectedTicket}
+            onClose={() => {
+              setIsBookingOpen(false);
+              setSelectedTicket(null);
+            }}
+            onBooked={() => handleAppointmentBooked(selectedTicket)}
+          />
+          
+          <FeedbackDialog
+            open={isFeedbackOpen}
+            ticketId={selectedTicket}
+            onClose={() => {
+              setIsFeedbackOpen(false);
+              setSelectedTicket(null);
+            }}
+            onSubmit={() => handleFeedbackSubmitted(selectedTicket)}
+          />
+        </>
       )}
     </div>
   );

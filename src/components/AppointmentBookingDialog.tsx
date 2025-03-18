@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ interface AppointmentBookingDialogProps {
   open: boolean;
   ticketId: string;
   onClose: () => void;
+  onBooked: () => void;
 }
 
 // Simulate available time slots for the next 7 days
@@ -30,6 +31,7 @@ const AppointmentBookingDialog: React.FC<AppointmentBookingDialogProps> = ({
   open,
   ticketId,
   onClose,
+  onBooked,
 }) => {
   const today = new Date();
   const maxDate = addDays(today, 7); // 1 week window
@@ -45,7 +47,7 @@ const AppointmentBookingDialog: React.FC<AppointmentBookingDialogProps> = ({
 
     // In a real application, this would send data to your backend
     toast.success(`Appointment booked successfully for ${format(selectedDate, "PPP")} at ${selectedTime}`);
-    onClose();
+    onBooked(); // Call the callback to update the ticket status
   };
 
   // Function to check if a date is within the allowed range (next 7 days)
@@ -61,14 +63,14 @@ const AppointmentBookingDialog: React.FC<AppointmentBookingDialogProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Book an Appointment</DialogTitle>
+          <DialogDescription>
+            Select a date and time for your appointment. Appointments are available for the next 7 days.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <h3 className="text-sm font-medium">Select a Date</h3>
-            <p className="text-xs text-muted-foreground">
-              Appointments are available for the next 7 days.
-            </p>
             <Calendar
               mode="single"
               selected={selectedDate}
