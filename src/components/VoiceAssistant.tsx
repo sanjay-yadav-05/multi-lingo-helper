@@ -68,6 +68,9 @@ const VoiceAssistant: React.FC = () => {
   
   // Handles recording of voice responses for both language and category selection
   const handleVoiceResponse = (forStep: "language" | "category") => {
+    // Cancel any ongoing speech synthesis when starting microphone
+    speechSynthesis.current.cancel();
+    
     setVoicePromptActive(true);
     setVoiceResponseText("");
     setIsRecording(true);
@@ -142,6 +145,7 @@ const VoiceAssistant: React.FC = () => {
   
   // Handle category selection
   const handleCategorySelect = async (category: string) => {
+    console.log("Category selected:", category);
     setSelectedCategory(category);
     
     // Get localized category name if available
@@ -155,17 +159,23 @@ const VoiceAssistant: React.FC = () => {
     // Speak category confirmation message
     await speakText(message);
     
-    // Move to next step immediately to reduce delay
-    setCurrentStep(Step.IssueDescription);
-    
-    // After a short delay, speak the issue prompt
-    setTimeout(async () => {
-      await speakText(translations.issuePrompt[selectedLanguage as keyof typeof translations.issuePrompt]);
+    // Force move to next step with a slight delay to ensure state updates
+    setTimeout(() => {
+      console.log("Moving to issue description step");
+      setCurrentStep(Step.IssueDescription);
+      
+      // After a short delay, speak the issue prompt
+      setTimeout(async () => {
+        await speakText(translations.issuePrompt[selectedLanguage as keyof typeof translations.issuePrompt]);
+      }, 300);
     }, 300);
   };
   
   // Handle microphone button click
   const handleMicrophoneClick = () => {
+    // Cancel any ongoing speech synthesis when starting microphone
+    speechSynthesis.current.cancel();
+    
     if (isRecording) {
       // Stop recording
       speechRecognition.current.stop();

@@ -31,6 +31,7 @@ const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({
         )}
         onClick={onClick}
         disabled={isProcessing}
+        title="Tap to start speaking or to stop current speech"
       >
         <motion.div
           animate={isRecording ? { scale: [1, 1.05, 1] } : { scale: 1 }}
